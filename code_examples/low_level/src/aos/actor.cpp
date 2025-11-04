@@ -51,7 +51,6 @@ Particle::Particle(const arma::vec2& pos, const arma::vec2& vel, double mass) {
     this->pos = pos;
     this->vel = vel;
     this->mass = mass;
-    new_position = pos;
 
     float radius = part_radius;
     // preparing the sprite for drawing
@@ -64,20 +63,20 @@ Particle::Particle(const arma::vec2& pos, const arma::vec2& vel, double mass) {
 
 bool Particle::update(double dt) {
     // update position using Heun's method
-    pos = new_position; // we store the current position so that all particles are equally affected by gravity, i.e. at the same time
-    const arma::vec2 temp_pos = pos + dt/2. * ( vel + vel + dt*acceleration() );
-    vel = vel + dt/2. * (acceleration() + acceleration(pos + dt * vel));
-    new_position = temp_pos;
+    arma::vec2 accelerationPre = acceleration();
+    arma::vec2 accelerationPost = acceleration(pos + dt * vel);
+    pos += dt/2. * ( vel + vel + dt*accelerationPre );
+    vel = vel + dt/2. * (accelerationPre + accelerationPost);
 
     // if the particle is outside of the box wrap it back in on the opposite side
     // TODO: add WRAP_PARTICLES as a possible definition for cmake in the README
 #if WRAP_PARTICLES == 1
-    for (int i = 0; i < new_position.n_elem; i++) {
-        if (new_position[i] < Box::lowerBounds[i]) {
-            new_position(i) = Box::upperBounds[i] - fmod(Box::lowerBounds[i] - new_position[i], Box::upperBounds[i] - Box::lowerBounds[i]);
+    for (int i = 0; i < pos.n_elem; i++) {
+        if (pos[i] < Box::lowerBounds[i]) {
+            pos(i) = Box::upperBounds[i] - fmod(Box::lowerBounds[i] - pos[i], Box::upperBounds[i] - Box::lowerBounds[i]);
         }
-        else if (new_position[i] >= Box::upperBounds[i]) {
-            new_position[i] = Box::lowerBounds[i] + fmod(new_position[i] - Box::lowerBounds[i], Box::upperBounds[i] - Box::lowerBounds[i]);
+        else if (pos[i] >= Box::upperBounds[i]) {
+            pos[i] = Box::lowerBounds[i] + fmod(pos[i] - Box::lowerBounds[i], Box::upperBounds[i] - Box::lowerBounds[i]);
         }
     }
 #else
@@ -88,14 +87,14 @@ bool Particle::update(double dt) {
 
     // if the particle is in a hole -> delete and generate new particle with new conditions
     for (const auto& hole : Box::holes) {
-        double dist = arma::norm(hole->pos - new_position);
+        double dist = arma::norm(hole->pos - pos);
         if (dist <= hole->radius) {
             return false;
         }
     }
 
     // we update to the new position on the screen
-    shape->setPosition(sf::Vector2f{(float) new_position(0), (float) new_position(1)});
+    shape->setPosition(sf::Vector2f{(float) pos(0), (float) pos(1)});
 
     // pos now holds the old position which will be used by the other actors to update their position
     return true;

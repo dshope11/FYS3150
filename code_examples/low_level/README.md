@@ -49,6 +49,7 @@ Each implemented optimisation can will be found in the subsections for the diffe
 ## AoS vs SoA
 
 This is placeholder text, I will go into detail later but for now:
+
 I wrote the AoS (fully object oriented) code late winter 2025.
 The code was written with many suboptimal implementations and steps, some of these were on purpose yet most -probably- are simply sourced in some wisdom of not writing optimal code on the first try.
 I left the code aside to complete my thesis and go on vacation, through which I completely forgot how I wrote the code.
@@ -56,6 +57,6 @@ Now, starting in late October 2025, I have picked the code up again as if I foun
 
 The first step was to transform the code from AoS to SoA.
 It took me $1.5$ hours to get reacquainted with the code (it's a pretty small repository to be fair) and 5 hours to transform the code into SoA and adapt the CMakeLists.txt file and repository structure such that I can choose which version to run when I compile.
-When I run the AoS code on a Apple M3 Pro ARM-CPU I get a $\sim 8.50$ ms physics-update time.
+When I run the AoS code on a Apple M3 Pro ARM-CPU I get a $\sim 5.90$ ms physics-update time.
 The SoA code gives me a $\sim 3.65$ ms physics-update time.
-We find the improvement through $$\frac{baseline}{new time} = \frac{8.50}{3.65} \approx 2.33,$$ so we have a $2.33$x improvement by switching the code structure from AoS to SoA!
+We find the improvement through $$\frac{baseline}{new time} = \frac{5.90}{3.65} \approx 1.62,$$ so we have a $1.62$x improvement by switching the code structure from AoS to SoA.
