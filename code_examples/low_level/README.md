@@ -16,7 +16,7 @@ This directory will contain an initial program which will model some simple spac
 
 Based on the initial program, I will push examples of
 1. [x] Array of structures (AoS) vs Structure of Arrays (SoA)
-2. [ ] ... vs Entity Component System (ECS)
+2. [x] ... vs Entity Component System (ECS)
 3. [ ] The cost of an arithmetic operation
 4. [ ] The order of arithmetic operations (it matters)
 5. [ ] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
@@ -57,6 +57,19 @@ Now, starting in late October 2025, I have picked the code up again as if I foun
 
 The first step was to transform the code from AoS to SoA.
 It took me $1.5$ hours to get reacquainted with the code (it's a pretty small repository to be fair) and 5 hours to transform the code into SoA and adapt the CMakeLists.txt file and repository structure such that I can choose which version to run when I compile.
-When I run the AoS code on a Apple M3 Pro ARM-CPU I get a $\sim 5.90$ ms physics-update time.
-The SoA code gives me a $\sim 3.65$ ms physics-update time.
-We find the improvement through $$\frac{baseline}{new time} = \frac{5.90}{3.65} \approx 1.62,$$ so we have a $1.62$x improvement by switching the code structure from AoS to SoA.
+When I run the AoS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 5.90$ ms physics-update time.
+The SoA code gives me a $\sim 4.00$ ms physics-update time.
+We find the improvement through $$\frac{baseline}{new time} = \frac{5.90}{4.00} \approx 1.475,$$ so we have a $1.475$x improvement by switching the code structure from AoS to SoA.
+
+## ECS
+
+This is placeholder text, I will go into detail later but for now:
+
+ECS is quite a different way to write your code, but it ends up being fully SoA and incredibly general.
+There are some hiccups to keep it general in face of new entities (say ships or dark matter) which make for some double calculations in loops.
+For instance I chose to update the position of all entities with velocities with respect to all entities which have mass and position.
+That allows for a general updating of gravitational forces at the cost of looping extra over all entities (suboptimal looping).
+The strength is now that the changes I need to apply to the rest of my code when adding new entities (things that interact with the environment or other forces) are minimal, almost none: which is very nice if I want to make this simulation grow in complexity.
+
+Running the ECS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 8.00$ ms physics-update time.
+In this case, compared to AoS code we have no improvement other than the code is more easily maintainable... but does it scale better than OOP ?
