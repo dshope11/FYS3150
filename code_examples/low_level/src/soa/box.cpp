@@ -167,16 +167,11 @@ void Box::updateParticles(double dt) {
         }
     }
 
-    // we can now update the position
-    for (int i = 0; i < particles.size(); i++) {
-        particles.pos[i] += (particles.vel[i] + particles.vel[i] + dt * particles.accelerationPre[i]) * dt/2;
-    }
-
     // to update the velocity now we need the acceleration at the new point
     for (int i = 0; i < particles.size(); i++) {
         // start by finding the acceleration from holes
         for (int ii = 0; ii < holes.size(); ii++) {
-            arma::vec2 direction = holes.pos[ii] - particles.pos[i];
+            arma::vec2 direction = holes.pos[ii] - (particles.pos[i] + dt * particles.vel[i]);
             double dist = norm(direction);
             arma::vec2 total_force = G * holes.mass[ii] * particles.mass[i] / std::pow(dist, 2) * normalise(direction);
             particles.accelerationPost[i] += total_force /  particles.mass[i];
@@ -184,16 +179,19 @@ void Box::updateParticles(double dt) {
 
         // from the particles without double counting
         for (int ii = i+1; ii < particles.size(); ii++) {
-            arma::vec2 direction = particles.pos[ii] - particles.pos[i];
+            arma::vec2 direction = (particles.pos[ii] + dt * particles.vel[ii]) - (particles.pos[i] + dt * particles.vel[i]);
             double dist = norm(direction);
             arma::vec2 total_force = G * particles.mass[ii] * particles.mass[i] / std::pow(dist, 2) * normalise(direction);
             particles.accelerationPost[i] += total_force /  particles.mass[i];
             particles.accelerationPost[ii] -= total_force /  particles.mass[ii];
-
         }
     }
 
-    // we can now update the velocities
+    // we can now update the position and velocities according to Heun's method
+    for (int i = 0; i < particles.size(); i++) {
+        particles.pos[i] += (particles.vel[i] + particles.vel[i] + dt * particles.accelerationPre[i]) * dt/2;
+    }
+
     for (int i = 0; i < particles.size(); i++) {
         particles.vel[i] += (particles.accelerationPre[i] + particles.accelerationPost[i]) * dt/2;
     }
