@@ -8,6 +8,8 @@
   #include "aos/box.h"
 #elif defined(USE_SOA)
   #include "soa/box.h"
+#elif defined(USE_ECS)
+  #include "ecs/box.h"
 #else
-  #error "Define either USE_AOS or USE_SOA"
+  #error "Define either USE_AOS, USE_SOA or USE_ECS"
 #endif

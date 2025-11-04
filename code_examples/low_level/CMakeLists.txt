@@ -42,6 +42,12 @@ function(add_layout_exe target_name layout)
                 src/soa/particle.cpp
                 src/soa/hole.cpp
         )
+    elseif(layout STREQUAL "ECS")
+        target_compile_definitions(${target_name} PRIVATE USE_ECS)
+        target_sources(${target_name} PRIVATE
+                mwe.cpp
+                src/ecs/box.cpp
+        )
     else()
         message(FATAL_ERROR "Unknown layout '${layout}'. Use AOS or SOA.")
     endif()
@@ -59,3 +65,4 @@ endfunction()
 # ---- Build both executables -------------------------------------------------
 add_layout_exe(boxed_particles_aos AOS)
 add_layout_exe(boxed_particles_soa SOA)
+add_layout_exe(boxed_particles_ecs ECS)
