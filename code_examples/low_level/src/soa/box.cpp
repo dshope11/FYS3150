@@ -209,14 +209,6 @@ void Box::updateParticles(double dt) {
             }
         }
     }
-    for (int i = 0; i < new_position.n_elem; i++) {
-        if (new_position[i] < Box::lowerBounds[i]) {
-            new_position(i) = Box::upperBounds[i] - fmod(Box::lowerBounds[i] - new_position[i], Box::upperBounds[i] - Box::lowerBounds[i]);
-        }
-        else if (new_position[i] >= Box::upperBounds[i]) {
-            new_position[i] = Box::lowerBounds[i] + fmod(new_position[i] - Box::lowerBounds[i], Box::upperBounds[i] - Box::lowerBounds[i]);
-        }
-    }
 #else
     for (int i = 0; i < particles.size(); i++) {
         if (any(particles.pos[i] < Box::lowerBounds) || any(particles.pos[i] >= Box::upperBounds)) {
