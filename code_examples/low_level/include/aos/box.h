@@ -15,7 +15,9 @@ public:
     void Init();
     void update(double dt);
     void render();
+
     arma::vec2 startSide(int start);
+
     std::shared_ptr<Hole> generateHole();
     std::shared_ptr<Particle> generateParticle();
 

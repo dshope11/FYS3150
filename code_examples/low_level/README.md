@@ -15,8 +15,8 @@ As such, I have chosen to apply a language that shows just that:
 This directory will contain an initial program which will model some simple space physics and an optimised version of the.
 
 Based on the initial program, I will push examples of
-1. [ ] Array of structures (AoS) vs Structure of Arrays (SoA)
-   2. [ ] ... vs Entity Component System (ECS)
+1. [x] Array of structures (AoS) vs Structure of Arrays (SoA)
+2. [x] ... vs Entity Component System (ECS)
 3. [ ] The cost of an arithmetic operation
 4. [ ] The order of arithmetic operations (it matters)
 5. [ ] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
@@ -32,13 +32,44 @@ For the project I will simulate a 2D box with holes in which a number of small p
 The holes will have varying sizes and mass while the particles will have a fixed size and mass.
 As an initial case the holes will not be moving while the particles will be affected by force of gravity.
 If I have the time I will expand the rules of movement for each class and maybe add some more classes.
+If I find more time and some courage I will add a user interface (UI) and textures to make it look nice.
 
 The simulation will be displayed on a screen using the SFML package for simple graphics rendering.
-To measure the performance I will measure the time it takes to update each frame and gather it in a moving average for a stable point of comparison.
-The goal is then to either increase the number of particles on screen without increasing the frame rate or to reduce the frame rate while using the same number of particles.
-If I find the time and courage I will add a user interface (UI) and textures to make it look nice.
+To measure the performance I will measure the time it takes to update each physics-step and gather it in a moving average for a relatively stable point of comparison.
+The goal is then to either increase the number of particles on screen without increasing the update rate or to reduce the update rate while using the same number of particles.
+Here, one physics-step is calculating one timestep ($dt$) ahead; there may be a maximum number of physics updates between each frame update (the rendering step).
+This way we can keep improving the update rate without having it affect our visual experience: if these steps were not separate, the particles would move faster and faster for each improvement to the code.
 
 First the full program will be written without optimisation completely object oriented, i.e. using array of structures (AoS).
 As a First I will transform the code to be a structure of arrays (SoA) where necessary.
 Based on the SoA code, I will implement optimisations through `inline` functions via their respective header files.
 Each implemented optimisation can will be found in the subsections for the different optimisation techniques (see **What will come**), where they will be presented along with the necessary background information to understand _why_ and/or _how_ it works.
+
+
+## AoS vs SoA
+
+This is placeholder text, I will go into detail later but for now:
+
+I wrote the AoS (fully object oriented) code late winter 2025.
+The code was written with many suboptimal implementations and steps, some of these were on purpose yet most -probably- are simply sourced in some wisdom of not writing optimal code on the first try.
+I left the code aside to complete my thesis and go on vacation, through which I completely forgot how I wrote the code.
+Now, starting in late October 2025, I have picked the code up again as if I found it on the internet and had never anything to do with it before now: I did this in part because that is most likely your situation now, and because I struggled a little with picking it up again.
+
+The first step was to transform the code from AoS to SoA.
+It took me $1.5$ hours to get reacquainted with the code (it's a pretty small repository to be fair) and 5 hours to transform the code into SoA and adapt the CMakeLists.txt file and repository structure such that I can choose which version to run when I compile.
+When I run the AoS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 5.90$ ms physics-update time.
+The SoA code gives me a $\sim 4.00$ ms physics-update time.
+We find the improvement through $$\frac{baseline}{new time} = \frac{5.90}{4.00} \approx 1.475,$$ so we have a $1.475$x improvement by switching the code structure from AoS to SoA.
+
+## ECS
+
+This is placeholder text, I will go into detail later but for now:
+
+ECS is quite a different way to write your code, but it ends up being fully SoA and incredibly general.
+There are some hiccups to keep it general in face of new entities (say ships or dark matter) which make for some double calculations in loops.
+For instance I chose to update the position of all entities with velocities with respect to all entities which have mass and position.
+That allows for a general updating of gravitational forces at the cost of looping extra over all entities (suboptimal looping).
+The strength is now that the changes I need to apply to the rest of my code when adding new entities (things that interact with the environment or other forces) are minimal, almost none: which is very nice if I want to make this simulation grow in complexity.
+
+Running the ECS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 8.00$ ms physics-update time.
+In this case, compared to AoS code we have no improvement other than the code is more easily maintainable... but does it scale better than OOP ?

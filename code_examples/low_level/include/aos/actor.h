@@ -29,7 +29,6 @@ public:
     uint getType() override { return Actor::Particle_n; }
 private:
     arma::vec2 acceleration(const arma::vec2& positionOverride = arma::vec2());
-    arma::vec2 new_position;
 };
 
 class Hole : public Actor
