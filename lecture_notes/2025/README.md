@@ -187,10 +187,13 @@
   - Rejection sampling
   - Importance sampling
   - Inverse transform sampling
-
+- Start discussing Monte Carlo integration
 
 ### Lecture 24, November 7
-
+- Monte Carlo integration
+- Numerical integration in low dimensions
+  - Example of recursive integration algorithm
+- *If time*: Intro to Project 5
 
 
 ### Lecture 25, November 13
