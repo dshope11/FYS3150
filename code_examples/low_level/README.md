@@ -18,7 +18,7 @@ Based on the initial program, I will push examples of
 1. [x] Array of structures (AoS) vs Structure of Arrays (SoA)
 2. [x] ... vs Entity Component System (ECS)
 3. [ ] The cost of an arithmetic operation
-4. [ ] The order of arithmetic operations (it matters)
+4. [ ] The order of arithmetic operations - Instruction Level Parallelism
 5. [ ] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
 6. [ ] Fixed point arithmetics
 
@@ -71,5 +71,6 @@ For instance I chose to update the position of all entities with velocities with
 That allows for a general updating of gravitational forces at the cost of looping extra over all entities (suboptimal looping).
 The strength is now that the changes I need to apply to the rest of my code when adding new entities (things that interact with the environment or other forces) are minimal, almost none: which is very nice if I want to make this simulation grow in complexity.
 
+It took me 6 hours to write the ECS code, the main difficulty was to get used to the new coding paradigm (again).
 Running the ECS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 8.00$ ms physics-update time.
 In this case, compared to AoS code we have no improvement other than the code is more easily maintainable... but does it scale better than OOP ?

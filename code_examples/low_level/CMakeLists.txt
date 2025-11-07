@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---- Options ---------------------------------------------------------------
 option(WRAP_PARTICLES "Enable wrapping of particles around the map edges" OFF)
 
+set(COST_FUNC "policy::baseline" CACHE STRING "What cost policy to use")
+set_property(CACHE COST_FUNC PROPERTY STRINGS "policy::baseline;policy::simplified")
 # ---- Dependencies ----------------------------------------------------------
 find_package(Armadillo REQUIRED)
 # SFML 3 with Graphics, System, Window
@@ -48,8 +50,16 @@ function(add_layout_exe target_name layout)
                 mwe.cpp
                 src/ecs/box.cpp
         )
+    elseif(layout STREQUAL "SOAOPT")
+        target_compile_definitions(${target_name} PRIVATE USE_SOAOPT COST_FUNC=${COST_FUNC})
+        target_sources(${target_name} PRIVATE
+                mwe.cpp
+                src/optimisation_soa/box.cpp
+                src/optimisation_soa/particle.cpp
+                src/optimisation_soa/hole.cpp
+        )
     else()
-        message(FATAL_ERROR "Unknown layout '${layout}'. Use AOS or SOA.")
+        message(FATAL_ERROR "Unknown layout '${layout}'. Use AOS, SOA, ECS or SOAOPT.")
     endif()
 
     # Link libraries
@@ -66,3 +76,4 @@ endfunction()
 add_layout_exe(boxed_particles_aos AOS)
 add_layout_exe(boxed_particles_soa SOA)
 add_layout_exe(boxed_particles_ecs ECS)
+add_layout_exe(boxed_particles_soaOpt SOAOPT)

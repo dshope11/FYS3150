@@ -10,6 +10,8 @@
   #include "soa/box.h"
 #elif defined(USE_ECS)
   #include "ecs/box.h"
+#elif defined(USE_SOAOPT)
+  #include "optimisation_soa/box.h"
 #else
   #error "Define either USE_AOS, USE_SOA or USE_ECS"
 #endif
