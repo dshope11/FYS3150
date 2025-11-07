@@ -37,7 +37,6 @@ void Box::Init() {
 }
 
 void Box::update(double dt) {
-    Timer t;
 
     // run all relevant systems
     resetAccelerations();
@@ -47,9 +46,6 @@ void Box::update(double dt) {
     spawnSystem();
     updateShapes();
 
-    // report frame time
-    frameTimeAvg = 0.95f * frameTimeAvg + 0.05f * t.elapsed() * 1000;
-    printf( "update time: %5.2fms\n", frameTimeAvg );
 }
 
 void Box::render() {

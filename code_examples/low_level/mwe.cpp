@@ -11,6 +11,7 @@ int main() {
 
     Timer t;
     double accTime = 0.0;
+    float frameTimeAvg = 10.0f; // estimate of average time spent per frame in ms
 
     while (Box::window.isOpen()) {
 
@@ -28,8 +29,14 @@ int main() {
         }
         accTime = 0.0;
         while (accTime <= 1000/60.) {
+            t.reset();
             box.update(dt);
-            accTime += t.elapsed()*1000;    // time elapsed in ms
+
+            const float time = t.elapsed();
+            accTime += time*1000;    // time elapsed in ms
+
+            frameTimeAvg = 0.925f * frameTimeAvg + 0.075f * time * 1000;
+            printf( "update time: %5.2fms\n", frameTimeAvg );
         }
 
         box.render();

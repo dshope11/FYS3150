@@ -42,7 +42,6 @@ void Box::Init() {
 }
 
 void Box::update(double dt) {
-    Timer t;
 
     // update only particles as the holes do nothing yet!
     updateParticles(dt);
@@ -51,10 +50,6 @@ void Box::update(double dt) {
     for (int i = 0; i < std::min(PARTICLE_WAVE, N_PARTICLES - (int) particles.size()); i++) {
         generateParticle();
     }
-
-    // report frame time
-    frameTimeAvg = 0.95f * frameTimeAvg + 0.05f * t.elapsed() * 1000;
-    printf( "update time: %5.2fms\n", frameTimeAvg );
 }
 
 void Box::render() {

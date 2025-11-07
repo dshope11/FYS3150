@@ -46,7 +46,6 @@ void Box::Init() {
 }
 
 void Box::update(double dt) {
-    Timer t;
 
     // update all actors
     for (int i = 0; i < (int) actorPool.size(); i++) {
@@ -75,11 +74,6 @@ void Box::update(double dt) {
         actorPool.push_back(std::vector< std::shared_ptr<Actor> >::value_type(particle));
         particlesOnScreen++;
     }
-
-    // report frame time
-    frameTimeAvg = 0.95f * frameTimeAvg + 0.05f * t.elapsed() * 1000;
-    printf( "update time: %5.2fms\n", frameTimeAvg );
-
 }
 
 void Box::render() {

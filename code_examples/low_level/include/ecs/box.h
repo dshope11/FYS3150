@@ -34,7 +34,6 @@ public:
        static inline arma::vec2 upperBounds = {SCRNWIDTH, SCRNHEIGHT};
        static inline arma::vec2 lowerBounds = {0., 0.};
        static inline sf::RenderWindow window;
-       float frameTimeAvg = 10.0f; // estimate of average time spent per frame in ms
 };
 
 #endif //BOXED_PARTICLES_BOX_H
