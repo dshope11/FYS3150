@@ -16,6 +16,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 #include <memory>
+#include <thread>
 
 typedef unsigned char uchar;
 typedef unsigned int uint;

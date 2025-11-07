@@ -27,10 +27,17 @@ int main() {
                     Box::window.close();
             }
         }
+
+        int n_updates = 0;
         accTime = 0.0;
         while (accTime <= 1000/60.) {
+            if (n_updates >16 ) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000/60) - std::chrono::duration<float, std::milli>(accTime));
+                break;
+            }
             t.reset();
             box.update(dt);
+            n_updates++;
 
             const float time = t.elapsed();
             accTime += time*1000;    // time elapsed in ms
