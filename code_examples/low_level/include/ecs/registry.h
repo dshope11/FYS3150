@@ -14,7 +14,20 @@
 
 struct Registry {
     EntityID next{0};   // fancy modern C++ means initialise first instance as 0
-    EntityID create() {return next++; } // here we update the identifier for each call to the create member function
+    std::vector<EntityID> freeIDs;   // LIFO stack
+
+    EntityID create() {
+        if (!freeIDs.empty()) {
+            const EntityID entity = freeIDs.back();
+            freeIDs.pop_back();
+            return entity;
+        }
+        return next++;
+    }
+
+    void destroy(const EntityID entity) {
+        freeIDs.push_back(entity);
+    }
 };
 
 struct WorldRegistry {

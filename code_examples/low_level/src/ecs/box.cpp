@@ -198,11 +198,8 @@ void Box::gravitySystem(double dt) {
 void Box::integrateSystem(double dt) {
      for (EntityID i : world.vel.entities) {
          world.pos.get(i).value += (world.vel.get(i).value + dt * world.accelerationPre.get(i).value) * dt/2;
+         world.vel.get(i).value += (world.accelerationPre.get(i).value + world.accelerationPost.get(i).value) * dt/2;
      }
-
-    for (EntityID i : world.vel.entities) {
-        world.vel.get(i).value += (world.accelerationPre.get(i).value + world.accelerationPost.get(i).value) * dt/2;
-    }
 }
 
 void Box::eliminationSystem() {
@@ -228,6 +225,8 @@ void Box::eliminationSystem() {
             world.particle.remove(i);
             world.accelerationPost.remove(i);
             world.accelerationPre.remove(i);
+
+            world.entities.destroy(i);
         }
     }
 #endif
@@ -243,6 +242,8 @@ void Box::eliminationSystem() {
                 world.particle.remove(i);
                 world.accelerationPost.remove(i);
                 world.accelerationPre.remove(i);
+
+                world.entities.destroy(i);
             }
         }
     }
