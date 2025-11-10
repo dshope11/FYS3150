@@ -74,3 +74,21 @@ The strength is now that the changes I need to apply to the rest of my code when
 It took me 6 hours to write the ECS code, the main difficulty was to get used to the new coding paradigm (again).
 Running the ECS code on an Apple M3 Pro ARM-CPU for $100$ particles I get a $\sim 8.00$ ms physics-update time.
 In this case, compared to AoS code we have no improvement other than the code is more easily maintainable... but does it scale better than OOP ?
+
+## The cost of an arithmetic operation
+
+This is placeholder text, I will go into detail later but for now:
+
+In [`include/optimisation_soa/policies.h`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/include/optimisation_soa/policies.h) you can find two `inline` functions which are named `policies::baseline` and `policies::simplified`.
+The first of those is the code you can find in the SoA directories, i.e. before we try to optimise.
+The latter, `policies::simplified`, contains the same logic but where I've reduced the number of arithmetic operations, namely:
+1. there is one square root instead of two,
+2. mass is absent as we return an acceleration,
+3. there is now 1 division instead of two,
+4. and we precompute the reciprocal.
+
+To efficiently change between the two policies you can compile with a cmake flag `-DCOST_FUNC=policy::simplified`, where what comes after the equal sign is the function you want to use.
+You are free to define a function for each change, and I invite you to do so!
+
+In my case, when running on an Apple M3 Pro ARM-CPU I get an improvement of $1.6$x.
+With the improvement of converting the code to SoA from the OOP AoS which was $\sim1.5$x, we get a total improvement of approximately $1.6 \times 1.5 =2.2$x.
