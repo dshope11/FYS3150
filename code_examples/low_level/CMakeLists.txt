@@ -10,6 +10,9 @@ option(WRAP_PARTICLES "Enable wrapping of particles around the map edges" OFF)
 
 set(COST_FUNC "policy::baseline" CACHE STRING "What cost policy to use")
 set_property(CACHE COST_FUNC PROPERTY STRINGS "policy::baseline;policy::simplified")
+
+set(ILP "NONE" CACHE STRING "Use ILP policy NONE, BRAID2")
+set_property(CACHE ILP PROPERTY STRINGS "NONE;BRAID2")
 # ---- Dependencies ----------------------------------------------------------
 find_package(Armadillo REQUIRED)
 # SFML 3 with Graphics, System, Window
@@ -51,7 +54,7 @@ function(add_layout_exe target_name layout)
                 src/ecs/box.cpp
         )
     elseif(layout STREQUAL "SOAOPT")
-        target_compile_definitions(${target_name} PRIVATE USE_SOAOPT COST_FUNC=${COST_FUNC})
+        target_compile_definitions(${target_name} PRIVATE USE_SOAOPT COST_FUNC=${COST_FUNC} ILP=${ILP})
         target_sources(${target_name} PRIVATE
                 mwe.cpp
                 src/optimisation_soa/box.cpp

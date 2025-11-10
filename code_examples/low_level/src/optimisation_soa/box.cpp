@@ -146,6 +146,7 @@ void Box::updateParticles(double dt) {
         GM_holes[i] = G * holes.mass[i];
     }
 
+#if ILP == NONE
     // we update the particles through Heun's method
     // we find the acceleration of the particles
     for (int i = 0; i < particles.size(); i++) {
@@ -187,7 +188,93 @@ void Box::updateParticles(double dt) {
     for (int i = 0; i < particles.size(); i++) {
         particles.vel[i] += (particles.accelerationPre[i] + particles.accelerationPost[i]) * dt/2;
     }
+#elif ILP == BRAID2
+    // we update the particles through Heun's method
+    // we find the acceleration of the particles
+    for (int i = 0; i < particles.size(); i++) {
+        // start by finding the acceleration from holes
+        int ii = 0;
+        for (; ii + 1 < holes.size(); ii+=2) {
+            // OPT: we implement the function we want through macros
+            arma::vec2 acc_1 = {0., 0.};
+            arma::vec2 acc_2 = {0., 0.};
+            policy::braid2simplified(particles.pos[i], holes.pos[ii], GM_holes[ii], acc_1,
+                                     particles.pos[i], holes.pos[ii+1], GM_holes[ii+1], acc_2);
 
+            particles.accelerationPre[i] += acc_1 + acc_2;
+        }
+        // in case the number of holes is odd
+        if (ii < holes.size()) {
+            particles.accelerationPre[i] += COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii]);
+        }
+
+        ii = i+1;
+        // from the particles without double counting
+        for (; ii + 1 < particles.size(); ii+=2) {
+            arma::vec2 acc_1 = {0., 0.};
+            arma::vec2 acc_2 = {0., 0.};
+            policy::braid2simplified(particles.pos[i], particles.pos[ii], G * particles.mass[ii], acc_1,
+                                     particles.pos[i], particles.pos[ii+1], G * particles.mass[ii+1], acc_2);
+
+            particles.accelerationPre[i] += acc_1 + acc_2;
+            particles.accelerationPre[ii] -= acc_1 * particles.mass[i] / particles.mass[ii];
+            particles.accelerationPre[ii+1] -= acc_2 * particles.mass[i] / particles.mass[ii+1];
+        }
+        // in case the number of holes is odd
+        if (ii < particles.size()) {
+            arma::vec2 acceleration = COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii]);
+            particles.accelerationPre[i] += acceleration;
+            particles.accelerationPre[ii] -= acceleration * particles.mass[i] / particles.mass[ii];
+        }
+    }
+
+    // to update the velocity now we need the acceleration at the new point
+    for (int i = 0; i < particles.size(); i++) {
+        // start by finding the acceleration from holes
+        int ii = 0;
+        for (; ii + 1 < holes.size(); ii+=2) {
+            // OPT: we implement the function we want through macros
+            arma::vec2 acc_1 = {0., 0.};
+            arma::vec2 acc_2 = {0., 0.};
+            policy::braid2simplified(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii], acc_1,
+                                     particles.pos[i] + dt * particles.vel[i], holes.pos[ii+1], GM_holes[ii+1], acc_2);
+
+            particles.accelerationPre[i] += acc_1 + acc_2;
+        }
+        // in case the number of holes is odd
+        if (ii < holes.size()) {
+            particles.accelerationPre[i] += COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii]);
+        }
+
+        ii = i+1;
+        // from the particles without double counting
+        for (; ii + 1 < particles.size(); ii+=2) {
+            arma::vec2 acc_1 = {0., 0.};
+            arma::vec2 acc_2 = {0., 0.};
+            policy::braid2simplified(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii], acc_1,
+                                     particles.pos[i] + dt * particles.vel[i], particles.pos[ii+1] + dt * particles.vel[ii+1], G * particles.mass[ii+1], acc_2);
+
+            particles.accelerationPre[i] += acc_1 + acc_2;
+            particles.accelerationPre[ii] -= acc_1 * particles.mass[i] / particles.mass[ii];
+            particles.accelerationPre[ii+1] -= acc_2 * particles.mass[i] / particles.mass[ii+1];
+        }
+        // in case the number of holes is odd
+        if (ii < particles.size()) {
+            arma::vec2 acceleration = COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii]);
+            particles.accelerationPre[i] += acceleration;
+            particles.accelerationPre[ii] -= acceleration * particles.mass[i] / particles.mass[ii];
+        }
+    }
+
+    // we can now update the position and velocities according to Heun's method
+    for (int i = 0; i < particles.size(); i++) {
+        particles.pos[i] += (particles.vel[i] + particles.vel[i] + dt * particles.accelerationPre[i]) * dt/2;
+    }
+
+    for (int i = 0; i < particles.size(); i++) {
+        particles.vel[i] += (particles.accelerationPre[i] + particles.accelerationPost[i]) * dt/2;
+    }
+#endif
     // if the particle is outside of the box wrap it back in on the opposite side
     // TODO: add WRAP_PARTICLES as a possible definition for cmake in the README
 #if WRAP_PARTICLES == 1
