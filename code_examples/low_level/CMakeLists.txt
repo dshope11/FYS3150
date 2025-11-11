@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---- Options ---------------------------------------------------------------
 option(WRAP_PARTICLES "Enable wrapping of particles around the map edges" OFF)
 
-set(COST_FUNC "policy::baseline" CACHE STRING "What cost policy to use")
-set_property(CACHE COST_FUNC PROPERTY STRINGS "policy::baseline;policy::simplified")
+set(COST_FUNC "baseline" CACHE STRING "What cost policy to use")
+set_property(CACHE COST_FUNC PROPERTY STRINGS "baseline;simplified")
 
 set(ILP "NONE" CACHE STRING "Use ILP policy NONE, BRAID2")
 set_property(CACHE ILP PROPERTY STRINGS "NONE;BRAID2")
@@ -61,6 +61,11 @@ function(add_layout_exe target_name layout)
                 src/optimisation_soa/particle.cpp
                 src/optimisation_soa/hole.cpp
         )
+    elseif(layout STREQUAL "EXAMPLES")
+        target_compile_definitions(${target_name} PRIVATE)
+        target_sources(${target_name} PRIVATE
+                examples.cpp
+        )
     else()
         message(FATAL_ERROR "Unknown layout '${layout}'. Use AOS, SOA, ECS or SOAOPT.")
     endif()
@@ -80,3 +85,4 @@ add_layout_exe(boxed_particles_aos AOS)
 add_layout_exe(boxed_particles_soa SOA)
 add_layout_exe(boxed_particles_ecs ECS)
 add_layout_exe(boxed_particles_soaOpt SOAOPT)
+add_layout_exe(examples EXAMPLES)

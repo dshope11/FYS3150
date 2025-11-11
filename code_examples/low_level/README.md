@@ -17,8 +17,8 @@ This directory will contain an initial program which will model some simple spac
 Based on the initial program, I will push examples of
 1. [x] Array of structures (AoS) vs Structure of Arrays (SoA)
 2. [x] ... vs Entity Component System (ECS)
-3. [ ] The cost of an arithmetic operation
-4. [ ] The order of arithmetic operations - Instruction Level Parallelism
+3. [x] The cost of an arithmetic operation
+4. [x] The order of arithmetic operations - Instruction Level Parallelism
 5. [ ] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
 6. [ ] Fixed point arithmetics
 
@@ -92,3 +92,29 @@ You are free to define a function for each change, and I invite you to do so!
 
 In my case, when running on an Apple M3 Pro ARM-CPU I get an improvement of $1.6$x.
 With the improvement of converting the code to SoA from the OOP AoS which was $\sim1.5$x, we get a total improvement of approximately $1.6 \times 1.5 =2.2$x.
+
+To add some flesh to this example you can also explore the [`examples.cpp`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/examples.cpp) file.
+In it you will find an example to measure the cost of a square root operation in terms of nanoseconds.
+This example is minimal, but the improvement is non-negligible: I get a 1.1x improvement from removing a `std::sqrt()`.
+
+## The order of independent arithmetic operations - Instruction Level Parallelism (ILP)
+
+This is placeholder text, I will go into detail later but for now:
+
+I have implemented an ILP example in [`include/optimisation_soa/policies.h`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/include/optimisation_soa/policies.h) with leading name `braid2` followed by the arithmetic policy to use.
+In essence, we want to execute multiple independent instructions (such as arithmetic operations) at the same time.
+We achieve this by separating independent computations such that while the CPU is working on executing the first instruction it can start on the second as it is independent on the fist:
+$$a = b + c$$
+$$d = e + f$$
+$$g = a + d.$$
+In the above case $a$ and $d$ can be computed independently of each other and so the CPU can compute them 'in parallel'.
+It's not REALLY in parallel, but the total time from start to finish may be diminished.
+There are some quirks that may come in the way of having improvements from ILP.
+Take my implementation for instance: I get a $<1$x improvement from taking two items at a time rather than one.
+This can be due to myriad things, though I suspect it is because I fetch the same data multiple places unnecessarily (see where I access arrays).
+The time it takes to fetch the data is comparable to the computation speed-'gain' AND I suspect I should braid over more than two items at a time.
+
+To check I implemented a `braid2` and `braid4` in [`examples.cpp`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/examples.cpp) to check.
+For `braid4` I also cache the array fetching since I am quite aware of it slowing down my code alongside my speed-up, hence they go hand-in-hand.
+I only get an improvement from the baseline with the `braid4` case, and indeed: an improvement comparable to removing a square root!
+Lesson: first remove the square root, then maybe restructure your loop if you need to.

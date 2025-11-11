@@ -153,12 +153,12 @@ void Box::updateParticles(double dt) {
         // start by finding the acceleration from holes
         for (int ii = 0; ii < holes.size(); ii++) {
             // OPT: we implement the function we want through macros
-            particles.accelerationPre[i] += COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii]);
+            particles.accelerationPre[i] += policy::COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii]);
         }
 
         // from the particles without double counting
         for (int ii = i+1; ii < particles.size(); ii++) {
-            arma::vec2 acceleration = COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii]);
+            arma::vec2 acceleration = policy::COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii]);
             particles.accelerationPre[i] += acceleration;
             particles.accelerationPre[ii] -= acceleration * particles.mass[i] / particles.mass[ii];
 
@@ -169,12 +169,12 @@ void Box::updateParticles(double dt) {
     for (int i = 0; i < particles.size(); i++) {
         // start by finding the acceleration from holes
         for (int ii = 0; ii < holes.size(); ii++) {
-            particles.accelerationPost[i] += COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii]);
+            particles.accelerationPost[i] += policy::COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii]);
         }
 
         // from the particles without double counting
         for (int ii = i+1; ii < particles.size(); ii++) {
-            arma::vec2 acceleration = COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii]);
+            arma::vec2 acceleration = policy::COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii]);
             particles.accelerationPost[i] += acceleration;
             particles.accelerationPost[ii] -= acceleration * particles.mass[i] /  particles.mass[ii];
         }
@@ -198,14 +198,14 @@ void Box::updateParticles(double dt) {
             // OPT: we implement the function we want through macros
             arma::vec2 acc_1 = {0., 0.};
             arma::vec2 acc_2 = {0., 0.};
-            policy::braid2simplified(particles.pos[i], holes.pos[ii], GM_holes[ii], acc_1,
+            policy::braid2COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii], acc_1,
                                      particles.pos[i], holes.pos[ii+1], GM_holes[ii+1], acc_2);
 
             particles.accelerationPre[i] += acc_1 + acc_2;
         }
         // in case the number of holes is odd
         if (ii < holes.size()) {
-            particles.accelerationPre[i] += COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii]);
+            particles.accelerationPre[i] += policy::COST_FUNC(particles.pos[i], holes.pos[ii], GM_holes[ii]);
         }
 
         ii = i+1;
@@ -213,7 +213,7 @@ void Box::updateParticles(double dt) {
         for (; ii + 1 < particles.size(); ii+=2) {
             arma::vec2 acc_1 = {0., 0.};
             arma::vec2 acc_2 = {0., 0.};
-            policy::braid2simplified(particles.pos[i], particles.pos[ii], G * particles.mass[ii], acc_1,
+            policy::braid2COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii], acc_1,
                                      particles.pos[i], particles.pos[ii+1], G * particles.mass[ii+1], acc_2);
 
             particles.accelerationPre[i] += acc_1 + acc_2;
@@ -222,7 +222,7 @@ void Box::updateParticles(double dt) {
         }
         // in case the number of holes is odd
         if (ii < particles.size()) {
-            arma::vec2 acceleration = COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii]);
+            arma::vec2 acceleration = policy::COST_FUNC(particles.pos[i], particles.pos[ii], G * particles.mass[ii]);
             particles.accelerationPre[i] += acceleration;
             particles.accelerationPre[ii] -= acceleration * particles.mass[i] / particles.mass[ii];
         }
@@ -236,14 +236,14 @@ void Box::updateParticles(double dt) {
             // OPT: we implement the function we want through macros
             arma::vec2 acc_1 = {0., 0.};
             arma::vec2 acc_2 = {0., 0.};
-            policy::braid2simplified(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii], acc_1,
+            policy::braid2COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii], acc_1,
                                      particles.pos[i] + dt * particles.vel[i], holes.pos[ii+1], GM_holes[ii+1], acc_2);
 
             particles.accelerationPre[i] += acc_1 + acc_2;
         }
         // in case the number of holes is odd
         if (ii < holes.size()) {
-            particles.accelerationPre[i] += COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii]);
+            particles.accelerationPre[i] += policy::COST_FUNC(particles.pos[i] + dt * particles.vel[i], holes.pos[ii], GM_holes[ii]);
         }
 
         ii = i+1;
@@ -251,7 +251,7 @@ void Box::updateParticles(double dt) {
         for (; ii + 1 < particles.size(); ii+=2) {
             arma::vec2 acc_1 = {0., 0.};
             arma::vec2 acc_2 = {0., 0.};
-            policy::braid2simplified(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii], acc_1,
+            policy::braid2COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii], acc_1,
                                      particles.pos[i] + dt * particles.vel[i], particles.pos[ii+1] + dt * particles.vel[ii+1], G * particles.mass[ii+1], acc_2);
 
             particles.accelerationPre[i] += acc_1 + acc_2;
@@ -260,7 +260,7 @@ void Box::updateParticles(double dt) {
         }
         // in case the number of holes is odd
         if (ii < particles.size()) {
-            arma::vec2 acceleration = COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii]);
+            arma::vec2 acceleration = policy::COST_FUNC(particles.pos[i] + dt * particles.vel[i], particles.pos[ii] + dt * particles.vel[ii], G * particles.mass[ii]);
             particles.accelerationPre[i] += acceleration;
             particles.accelerationPre[ii] -= acceleration * particles.mass[i] / particles.mass[ii];
         }

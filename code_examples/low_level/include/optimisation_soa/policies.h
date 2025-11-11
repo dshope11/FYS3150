@@ -29,6 +29,21 @@ namespace policy {  // we use a namespace to avoid collisions and to keep all po
         return direction * GM * reciprocal;
     }
 
+    inline void braid2baseline(const arma::vec2& position_original1, const arma::vec2& position_other1, const double& GM1, arma::vec2& acceleration1,
+                        const arma::vec2& position_original2, const arma::vec2& position_other2, const double& GM2, arma::vec2& acceleration2) {
+        arma::vec2 direction_1 = position_other1 - position_original1;
+        arma::vec2 direction_2 = position_other2 - position_original2;
+
+
+        double dist_1 = arma::norm(direction_1);
+        double dist_2 = arma::norm(direction_2);
+
+        acceleration1 = GM1 / std::pow(dist_1, 2) * arma::normalise(direction_1);
+        acceleration2 = GM2 / std::pow(dist_2, 2) * arma::normalise(direction_2);
+
+        return;
+    }
+
     inline void braid2simplified(const arma::vec2& position_original1, const arma::vec2& position_other1, const double& GM1, arma::vec2& acceleration1,
                         const arma::vec2& position_original2, const arma::vec2& position_other2, const double& GM2, arma::vec2& acceleration2) {
         arma::vec2 direction_1 = position_other1 - position_original1;
@@ -44,16 +59,16 @@ namespace policy {  // we use a namespace to avoid collisions and to keep all po
         double reciprocal_2 = 1.0 / (dist2_2*dist_2);
 
         acceleration1 += direction_1 * GM1 * reciprocal_1;
-        acceleration1 += direction_2 * GM2 * reciprocal_2;
+        acceleration2 += direction_2 * GM2 * reciprocal_2;
 
         return;
     }
 }
 
 // we add the flags to toggle the implementations we want
-// during compilation you can flag -DCOST_FUNC=policy::FUNCTIONNAME where FUNCTIONNAME is the name of the function from the list above you want to use
+// during compilation you can flag -DCOST_FUNC=FUNCTIONNAME where FUNCTIONNAME is the name of the function from the list above you want to use
 #ifndef COST_FUNC
-#define COST_FUNC policy::baseline
+#define COST_FUNC baseline
 #endif
 #ifndef ILP
 #define ILP NONE
