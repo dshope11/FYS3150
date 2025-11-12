@@ -45,6 +45,28 @@ As a First I will transform the code to be a structure of arrays (SoA) where nec
 Based on the SoA code, I will implement optimisations through `inline` functions via their respective header files.
 Each implemented optimisation can will be found in the subsections for the different optimisation techniques (see **What will come**), where they will be presented along with the necessary background information to understand _why_ and/or _how_ it works.
 
+## Compile and run
+
+I use CMake to simplify the process of compiling and linking, so download it if you don't already have it.
+The instructions on how each version of the code is to be compiled can be found in the [`CMakeLists.txt`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/CMakeLists.txt) file.
+To run the compile and link the code you can follow these steps:
+1. git clone the repository and move to this directory.
+2. create a build directory ```cmake -S . -B build```, where `-S .` tells CMake where the source code is and `-B build` tells Cmake where to build.
+3. compile and link all executables with `cmake --build build --config Release`
+4. run executables as usual: `./build/Release/boxed_particles_aos`
+
+You can options such as particle wrapping (particles exiting on the left side reenter on the right side) with `cmake -S . -B build -DWRAP_PARTICLES=ON`.
+For the `SOAOPT` (SoA code that has optimisation examples) you can alternate through the different examples with
+```sh
+cmake -S . -B build -DILP=NONE
+# or
+cmake -S . -B build -DILP=BRAID2
+```
+and you can combine different options
+```sh
+cmake -S . -B build -DWRAP_PARTICLES=ON -DCOST_FUNC=simplified -DILP=BRAID2
+cmake --build build --target boxed_particles_soaOpt
+```
 
 ## AoS vs SoA
 
@@ -148,7 +170,7 @@ Out-of-order execution is a _hardware mechanism_ that reorders the instructions 
 | $c_4$ |       |       |                                 | Fetch (independent of above cycles) | Read    |         |       | Execute                       | Write   |          |
 
 
-Note that it out-of-order execution entirely hardware based, which is absolutely insane, it's truly a marvel of modern times.
+Note that out-of-order execution entirely hardware based, which is absolutely insane, it's truly a marvel of modern times.
 
 Expanding the hardware by adding multiple execution units expands the amount of available pipelines thus allowing parallel executions, this is what makes a CPU superscalar.
 In the first stage of superscalar CPUs consisted of separating integer (ALU), float (FLU) and address (AGU) operations.
