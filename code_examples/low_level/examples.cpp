@@ -5,7 +5,10 @@
 
 // we set it as volatile to avoid Dead Code Elimination (DCE)
 // by setting it to volatile we tell the compiler not to eliminate it even if it is not used directly in the final results of the present code
-static volatile double volatile_res;
+volatile double volatile_res;
+volatile int volatile_int;
+volatile double volatile_double;
+volatile double volatile_superscalar;
 
 int main() {
     std::random_device rd;
@@ -174,13 +177,63 @@ int main() {
                 "  simplified ns=%8.6f  checksum=%.8e  speedup=%.2fx\n",
                 baselineTime, baseSum, costTime, costSum, baselineTime / costTime);
 
-    std::printf("ILP:\n  scalar    ns=%8.6f  checksum=%.8e\n"
+    std::printf("ILP:\n  baseline    ns=%8.6f  checksum=%.8e\n"
                 "  braided2  ns=%8.6f  checksum=%.8e  speedup=%.2fx\n",
                 baselineTime, baseSum, braidTime, braidSum, baselineTime / braidTime);
 
-    std::printf("ILP:\n  scalar    ns=%8.6f  checksum=%.8e\n"
-                "  braided4 with reduced fetching  ns=%8.6f  checksum=%.8e  speedup=%.2fx\n",
+    std::printf("ILP:\n  baseline    ns=%8.6f  checksum=%.8e\n"
+                "  braided4 with caching  ns=%8.6f  checksum=%.8e  speedup=%.2fx\n",
                 baselineTime, baseSum, braidSmartTime, braidSmartSum, baselineTime / braidSmartTime);
+
+    N = 100000000;
+
+    int a = 1, b = 2, c = 3, d = 4;
+    t.reset();
+    for (int i = 0; i < N; i++) {
+        a += b * c - d;
+        b += a * 3 + 1;
+        c += b ^ a;     // bitwise XOR is the exclusive or, it results to False under identical entries: 0010 ^ 0100 = 0110 which is 2 XOR 4 = 6 but it is NOT addition! 1011 ^ 1001 = 0010
+        d += c >> 1;    // a bitshift to the right is a division by two: 1010 >> 1 = 0101 is also (8 + 2) >> 1 = (4 + 1) which you may have guessed is 10 >> 1 = 5
+    }
+    double int_time = t.elapsed();
+    volatile_int = a + b + c + d;
+
+    double x = 1.1, y = 2.2, z = 3.3, w = 4.4;
+    t.reset();
+    for (int i = 0; i < N; i++) {
+        x += y * z - w;
+        y += x * 3 + 1;
+        z += y * x;
+        w += z * 0.5;
+    }
+    double double_time = t.elapsed();
+    volatile_double = x + y + z + w;
+
+    a = 5, b = 6, c = 13, d = 24;
+    x = 5.5, y = 6.6, z = 13.13, w = 24.24;
+    t.reset();
+    for (int i = 0; i < N; i++) {
+        a += b * c - d;
+        x += y * z - w;
+
+        b += a * 3 + 1;
+        y += x * 3 + 1;
+
+        c += b ^ a;
+        z += y * x;
+
+        d += c >> 1;
+        w += z * 0.5;
+    }
+    double superscalar_time = t.elapsed();
+    int temp = a + b + c + d;
+    volatile_double = x + y + z + w + (double) temp;
+
+    std::printf("int-only:   %.5f ns\n", int_time);
+    std::printf("float-only: %.5f ns\n", double_time);
+    std::printf("interleaved (int+float): %.5f ns\n", superscalar_time);
+    std::printf("speedup ≈ %.5fx vs sequential sum\n",
+                (int_time + double_time) / superscalar_time);
 
     return (volatile_res == 0.12345) ? 0 : 1; // touch volatile to keep compiler honest
 }

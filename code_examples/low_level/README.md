@@ -1,7 +1,7 @@
 # Welcome!
 
 This is a README for a now work in progress.
-I ([@NilsECT](https://github.com/NilsECT)) will be adding some low level optimisation examples along with some tips, tricks and useful links (not the video game character).
+I ([@NilsECT](https://github.com/NilsECT)) will be adding some low level optimisation examples along with some tips, tricks and useful links, not the video game character though he would be useful in a pinch.
 
 ##### A note on the language used:
 The text may appear less serious than the information presented.
@@ -19,7 +19,7 @@ Based on the initial program, I will push examples of
 2. [x] ... vs Entity Component System (ECS)
 3. [x] The cost of an arithmetic operation
 4. [x] The order of arithmetic operations - Instruction Level Parallelism
-5. [ ] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
+5. [x] Superscalar CPU, i.e. built-in parallelisation between float and integer operations
 6. [ ] Fixed point arithmetics
 
 ## The project
@@ -97,7 +97,79 @@ To add some flesh to this example you can also explore the [`examples.cpp`](http
 In it you will find an example to measure the cost of a square root operation in terms of nanoseconds.
 This example is minimal, but the improvement is non-negligible: I get a 1.1x improvement from removing a `std::sqrt()`.
 
-## The order of independent arithmetic operations - Instruction Level Parallelism (ILP)
+## CPU instruction execution
+
+This is placeholder text, I will go into detail later but for now:
+
+Here we enter a domain that is, in my opinion significantly cooler than what we have above (ECS is pretty cool though tbh): here we take advantage of how modern CPUs are designed!
+The Central Processing Unit performs a lot of things, and to perform these things it uses a set of instructions.
+CPUs operate with four main stages for each instruction:
+1. Fetch instruction (from memory)
+2. Read (decode)
+3. Execute (I include sending to an execution unit and actually executing the code into one)
+4. Writeback (store the result)
+
+You can consider the routine above like a kitchen at a restaurant where the incoming orders are your calculations, s.a. `double x = 1.1 - z;`.
+It is stored somewhere waiting for its turn, (1) the chef takes your little order on a paper, (2) the chef fetches `z` and makes `1.1`, (3) they make your dish by performing the operation, and finally (4) they send the answer out to you.
+
+In olden times there was only one unit, so only one cycle $c_i$ of Fetch-Read-Execute-Writeback could be performed at a time $t_i$:
+
+|       | $t_1$ | $t_2$ | $t_3$   | $t_4$ | $t_5$ | $t_6$ | $t_7$   | $t_8$ |
+|-------|-------|-------|---------|-------|-------|-------|---------|-------|
+| $c_1$ | Fetch | Read  | Execute | Write |       |       |         |       |
+| $c_2$ |       |       |         |       | Fetch | Read  | Execute | Write |
+
+This evolved into having multiple units such that the cycles can overlap though only one stage can be performed at the same time.
+This allows us to move faster through the cycles by performing each stage one after the other for consecutive cycles, this is called a pipeline:
+
+|       | $t_1$ | $t_2$ | $t_3$   | $t_4$    | $t_5$   | $t_6$   | $t_7$ |
+|-------|-------|-------|---------|----------|---------|---------|-------|
+| $c_1$ | Fetch | Read  | Execute | Write    |         |         |       |
+| $c_2$ |       | Fetch | Read    | Execute  | Write   |         |       |
+| $c_3$ |       |       | Fetch   | Read     | Execute | Write   |       |
+| $c_4$ |       |       |         | Fetch    | Read    | Execute | Write |
+
+Which is nice, but what if an execution takes a long time? Then the next cycle has to wait:
+
+|       | $t_1$ | $t_2$ | $t_3$   | $t_4$   | $t_5$   | $t_6$   | $t_7$   | $t_8$   | $t_9$ |
+|-------|-------|-------|---------|---------|---------|---------|---------|---------|-------|
+| $c_1$ | Fetch | Read  | Execute | Write   |         |         |         |         |       |
+| $c_2$ |       | Fetch | Read    | Execute | Execute | Execute | Execute | Write   |       |
+| $c_3$ |       |       | Fetch   | Read    |         |         |         | Execute | Write |
+
+The problem shown above has been mitigated through two different mechanisms, one that is simply expanding the hardware by adding more execution units and one that makes the hardware more intelligent by allowing out-of-order execution.
+Out-of-order execution is a _hardware mechanism_ that reorders the instructions by executing the instructions that are ready immediately, it optimises the execution unit use and is the basis of Instruction Level Parallelism:
+
+|       | $t_1$ | $t_2$ | $t_3$                           | $t_4$                               | $t_5$   | $t_6$   | $t_7$ | $t_8$                         | $t_9$   | $t_{10}$ |
+|-------|-------|-------|---------------------------------|-------------------------------------|---------|---------|-------|-------------------------------|---------|----------|
+| $c_1$ | Fetch | Read  | Execute                         | Write                               |         |         |       |                               |         |          |
+| $c_2$ |       | Fetch | Read                            | Execute                             | Execute | Execute | Write |                               |         |          |
+| $c_3$ |       |       | Fetch (needs result from $c_2$) |                                     |         |         |       | Read (needs Write from $c_2$) | Execute | Write    |
+| $c_4$ |       |       |                                 | Fetch (independent of above cycles) | Read    |         |       | Execute                       | Write   |          |
+
+
+Note that it out-of-order execution entirely hardware based, which is absolutely insane, it's truly a marvel of modern times.
+
+Expanding the hardware by adding multiple execution units expands the amount of available pipelines thus allowing parallel executions, this is what makes a CPU superscalar.
+In the first stage of superscalar CPUs consisted of separating integer (ALU), float (FLU) and address (AGU) operations.
+Each of these units can operate completely in parallel:
+
+|       |         | $t_1$ | $t_2$ | $t_3$   | $t_4$    | $t_5$   | $t_6$   | $t_7$ |
+|-------|---------|-------|-------|---------|----------|---------|---------|-------|
+| $c_1$ | Integer | Fetch | Read  | Execute | Write    |         |         |       |
+| $c_1$ | Float   | Fetch | Read  | Execute | Write    |         |         |       |
+| $c_1$ | Address | Fetch | Read  | Execute | Write    |         |         |       |
+| $c_2$ | Integer |       | Fetch | Read    | Execute  | Write   |         |       |
+| $c_2$ | Float   |       | Fetch | Read    | Execute  | Write   |         |       |
+| $c_2$ | Address |       | Fetch | Read    | Execute  | Write   |         |       |
+| $c_3$ | Integer |       |       | Fetch   | Read     | Execute | Write   |       |
+| $c_3$ | Float   |       |       | Fetch   | Read     | Execute | Write   |       |
+| $c_3$ | Address |       |       | Fetch   | Read     | Execute | Write   |       |
+
+So say you have some float operations to perform, and you have a bit of free time, then you can add some integer operations at the same time pretty much for free!
+Some modern computers have also expanded to have multiple of each execution units.
+
+### ILP example implementation
 
 This is placeholder text, I will go into detail later but for now:
 
@@ -118,3 +190,14 @@ To check I implemented a `braid2` and `braid4` in [`examples.cpp`](https://githu
 For `braid4` I also cache the array fetching since I am quite aware of it slowing down my code alongside my speed-up, hence they go hand-in-hand.
 I only get an improvement from the baseline with the `braid4` case, and indeed: an improvement comparable to removing a square root!
 Lesson: first remove the square root, then maybe restructure your loop if you need to.
+
+### Superscalar example implementation
+
+This is placeholder text, I will go into detail later but for now:
+
+I've written a short example to showcase the power of superscalar CPUs in [`examples.cpp`](https://github.com/anderkve/FYS3150/blob/master/code_examples/low_level/examples.cpp).
+We perform some integer operations with variables `a`, `b`, `c`, and `d` and take the time it takes to perform these operations $N=10^8$ times.
+We do a similar set of operations for floats `x`, `y`, `z`, and `w`.
+When performing the integer and float operations in separate loops on an Apple M3 Pro ARM-CPU, I get $t_{int} = 0.326$ ns for the integer operations and $t_{float} = 0.547$ ns for the float operations.
+When performing the same operations but setting the float and integer operations in the same loop, I get $t_{super} = 0.550$ ns.
+We have $t_{super} \approx t_{float}$, which means the integer operations did indeed come for 'free'!
