@@ -97,7 +97,7 @@ To add some flesh to this example you can also explore the [`examples.cpp`](http
 In it you will find an example to measure the cost of a square root operation in terms of nanoseconds.
 This example is minimal, but the improvement is non-negligible: I get a 1.1x improvement from removing a `std::sqrt()`.
 
-## CPU instruction execution
+## The CPU
 
 This is placeholder text, I will go into detail later but for now:
 
@@ -112,7 +112,7 @@ CPUs operate with four main stages for each instruction:
 You can consider the routine above like a kitchen at a restaurant where the incoming orders are your calculations, s.a. `double x = 1.1 - z;`.
 It is stored somewhere waiting for its turn, (1) the chef takes your little order on a paper, (2) the chef fetches `z` and makes `1.1`, (3) they make your dish by performing the operation, and finally (4) they send the answer out to you.
 
-In olden times there was only one unit, so only one cycle $c_i$ of Fetch-Read-Execute-Writeback could be performed at a time $t_i$:
+In olden times there was only one unit, so only one cycle of Fetch-Read-Execute-Writeback could be performed at a time:
 
 |       | $t_1$ | $t_2$ | $t_3$   | $t_4$ | $t_5$ | $t_6$ | $t_7$   | $t_8$ |
 |-------|-------|-------|---------|-------|-------|-------|---------|-------|
